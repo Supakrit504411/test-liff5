@@ -15,7 +15,7 @@
     <button onclick="sendToChatbot()">ส่งไปยัง LINE</button>
 
     <script>
-        const apiUrl = "https://script.google.com/macros/s/AKfycbxokwjWlcvAziZM0KOzMdb4DTBHUrKH3h-0g08-Oa3dtM_ZjNlbqgNxEcUhY-B_yAiJ/exec"; // ใส่ URL ของ Apps Script API
+        const apiUrl = "https://script.google.com/macros/s/AKfycbwl_ssMxh5IUDbT_7MLXPXGLzeOgfgBtZgJ14vByLLdjPM1QTXd0NOfHPqE5BUQ3f4K/exec"; // ใส่ URL ของ Apps Script API
 
         function searchData() {
             let pea = document.getElementById("peaInput").value;
@@ -38,25 +38,30 @@
         }
 
         function sendToChatbot() {
-            if (!liff.isInClient()) {
-                alert("กรุณาเปิดใน LINE App");
-                return;
-            }
-            let pea = document.getElementById("peaInput").value;
-            let resultText = document.getElementById("result").innerText;
+    if (!liff.isInClient()) {
+        alert("กรุณาเปิดใน LINE App");
+        return;
+    }
 
-            liff.sendMessages([
-                {
-                    type: "text",
-                    text: `ผลการค้นหา:\n${resultText}`
-                }
-            ])
-            .then(() => {
-                alert("ส่งไปยัง LINE Chatbot สำเร็จ!");
+    let pea = document.getElementById("peaInput").value;
+    liff.getProfile()
+        .then(profile => {
+            let userId = profile.userId;
+            fetch("https://script.google.com/macros/s/AKfycbwl_ssMxh5IUDbT_7MLXPXGLzeOgfgBtZgJ14vByLLdjPM1QTXd0NOfHPqE5BUQ3f4K/exec", { // 🔹 ใส่ URL Google Apps Script
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: userId, pea: pea })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("ส่งข้อมูลไปยัง LINE Chatbot สำเร็จ!");
                 liff.closeWindow();
             })
-            .catch(err => alert("ส่งไม่สำเร็จ: " + err));
-        }
+            .catch(err => alert("เกิดข้อผิดพลาด: " + err));
+        })
+        .catch(err => alert("ไม่สามารถดึงข้อมูลผู้ใช้: " + err));
+}
+
 
         function initializeLiff() {
             liff.init({ liffId: "2006772952-pxMLlYMG" }) // ใส่ LIFF ID
