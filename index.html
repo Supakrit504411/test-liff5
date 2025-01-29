@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ค้นหาข้อมูล PEA</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+  <h2>ค้นหาข้อมูล PEA</h2>
+  <input type="text" id="pea" placeholder="กรอกหมายเลข PEA" />
+  <button onclick="searchData()">ค้นหา</button>
+  <div id="results"></div>
+
+  <script>
+    const liffId = "2006772952-pxMLlYMG"; // ใส่ LIFF ID
+    const apiUrl = "https://script.google.com/macros/s/AKfycbxokwjWlcvAziZM0KOzMdb4DTBHUrKH3h-0g08-Oa3dtM_ZjNlbqgNxEcUhY-B_yAiJ/exec"; // ใส่ URL API
+
+    async function searchData() {
+      const pea = document.getElementById("pea").value;
+      if (!pea) {
+        alert("กรุณากรอก PEA");
+        return;
+      }
+
+      try {
+        let response = await fetch(`${apiUrl}?pea=${encodeURIComponent(pea)}`);
+        let data = await response.json();
+
+        if (data.length > 0) {
+          displayResults(data);
+          sendToChatbot(data);
+        } else {
+          document.getElementById("results").innerHTML = "<p>ไม่พบข้อมูล</p>";
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+
+    function displayResults(results) {
+      let html = results.map(item => `
+        <div>
+          <p><strong>PEA:</strong> ${item.pea}</p>
+          <p><strong>รายได้:</strong> ${item.income}</p>
+          <p><strong>ต้นทุน:</strong> ${item.cost}</p>
+          <p><strong>กำไร/ขาดทุน:</strong> ${item.profit}</p>
+          <p><strong>อัตราส่วน:</strong> ${item.ratio}</p>
+        </div>
+      `).join("");
+      document.getElementById("results").innerHTML = html;
+    }
+
+    function sendToChatbot(results) {
+      if (!liff.isInClient()) return;
+      liff.sendMessages([
+        {
+          type: "flex",
+          altText: "ผลการค้นหา",
+          contents: {
+            type: "carousel",
+            contents: results.map(item => ({
+              "type": "bubble",
+              "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                  { "type": "text", "text": "PEA: " + item.pea, "weight": "bold", "size": "lg" },
+                  { "type": "text", "text": "รายได้: " + item.income },
+                  { "type": "text", "text": "ต้นทุน: " + item.cost },
+                  { "type": "text", "text": "กำไร/ขาดทุน: " + item.profit },
+                  { "type": "text", "text": "อัตราส่วน: " + item.ratio }
+                ]
+              }
+            }))
+          }
+        }
+      ])
+      .then(() => alert("ส่งข้อมูลไปยัง LINE Chatbot สำเร็จ!"))
+      .catch(error => console.error("ส่งข้อความล้มเหลว:", error));
+    }
+
+    liff.init({ liffId }).then(() => console.log("LIFF Loaded")).catch(error => console.error("LIFF Error:", error));
+  </script>
+</body>
+</html>
